@@ -50,4 +50,4 @@ class CSV(object):
     @classmethod
     def show(cls, items):
         for item in items:
-            print item
+            print(item)

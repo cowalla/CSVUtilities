@@ -13,7 +13,7 @@ class CSV(object):
             raw = csv.readlines()
 
         self.rows = [
-            l.rstrip('\n').split(',')
+            l.rstrip('\n').rstrip('\r').split(',')
             for l in raw
         ]
         self.headers = self.rows.pop(0)
@@ -55,6 +55,20 @@ class CSV(object):
             self.headers[i]: row[i]
             for i in range(len(self.headers))
         }
+
+    def group_by(self, header_name):
+        groups = {}
+
+        for index in range(len(self.rows)):
+            item = self.row_dict(index)
+            group_key = item[header_name]
+
+            if group_key in groups:
+                groups[group_key].append(item)
+            else:
+                groups[group_key] = [item]
+
+        return groups
 
     def sum(self, column_name):
         column = self.column(column_name)

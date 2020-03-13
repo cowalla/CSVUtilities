@@ -1,5 +1,5 @@
 .idea/
-
+*.pyc
 ## BUILD FILES
 build/
 *.egg-info

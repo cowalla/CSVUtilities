@@ -6,19 +6,49 @@ class CSVException(BaseException):
 
 
 class CSV(object):
-    def __init__(self, path):
+    def __init__(self, path, quotes_enabled=False):
         self.path = path
 
         with open(path, 'r') as csv:
             raw = csv.readlines()
 
-        self.rows = [
-            l.rstrip('\n').rstrip('\r').split(',')
-            for l in raw
-        ]
+        self.rows = []
+
+        for l in raw:
+            line = l.rstrip('\n').rstrip('\r')
+
+            if quotes_enabled:
+                row = []
+                entry = ''
+                seen_quote = False
+
+                for char in line:
+                    is_quote = char == '"'
+
+                    if is_quote and not seen_quote:
+                        seen_quote = True
+                        continue
+                    elif is_quote and seen_quote:
+                        row.append(entry)
+                        entry = ''
+                        seen_quote = False
+                    elif not is_quote and seen_quote:
+                        entry += char
+
+                self.rows.append(row)
+
+            else:
+                self.rows.append(line.split(','))
+
         self.headers = self.rows.pop(0)
         self._init_header_indices()
         self.columns = zip(*self.rows)
+
+    def add_column(self, column_name, value_list):
+        self.columns.append(value_list)
+        self.headers.append(column_name)
+        self._init_header_indices()
+        self.rows = zip(*self.columns)
 
     def _init_header_indices(self):
         self.header_indices = {
@@ -44,6 +74,11 @@ class CSV(object):
             raise CSVException('Cannot set unequal column values')
 
         self.columns[column_index] = values
+
+    def _join_rows(self, r1_idx, r2_idx):
+        for idx, row in enumerate(self.rows):
+            row[r1_idx] = row[r1_idx] + row[r2_idx]
+            row.pop(r2_idx)
 
     def row(self, index):
         return self.rows[index]
@@ -83,6 +118,7 @@ class CSV(object):
             f.write(','.join(self.headers))
 
             for row in self.rows:
+                f.write('\n')
                 f.write(','.join(row))
 
         self.path = path

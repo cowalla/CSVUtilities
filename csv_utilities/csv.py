@@ -6,7 +6,7 @@ class CSVException(BaseException):
 
 
 class CSV(object):
-    def __init__(self, path, quotes_enabled=False):
+    def __init__(self, path, remote_quotes=False):
         self.path = path
 
         with open(path, 'r') as csv:
@@ -17,7 +17,7 @@ class CSV(object):
         for l in raw:
             line = l.rstrip('\n').rstrip('\r')
 
-            if quotes_enabled:
+            if remote_quotes:
                 row = []
                 entry = ''
                 seen_quote = False
@@ -42,19 +42,30 @@ class CSV(object):
 
         self.headers = self.rows.pop(0)
         self._init_header_indices()
-        self.columns = zip(*self.rows)
+        self.columns = list(zip(*self.rows))
 
     def add_column(self, column_name, value_list):
         self.columns.append(value_list)
         self.headers.append(column_name)
         self._init_header_indices()
-        self.rows = zip(*self.columns)
+        self.rows = list(zip(*self.columns))
 
     def _init_header_indices(self):
         self.header_indices = {
             self.headers[i]: i
             for i in range(len(self.headers))
         }
+
+    def echo_rows(self, rows, with_headers=True):
+        if with_headers:
+            print(','.join(self.headers))
+
+        for row in rows:
+            print(','.join(row))
+
+    def echo(self):
+        # Print out the CSV to STDOUT.
+        self.echo_rows(self.rows, with_headers=True)
 
     def column(self, column_name):
         try:
@@ -132,12 +143,12 @@ class CSV(object):
     @contextmanager
     def update_rows_from_columns(self):
         yield
-        self.rows = zip(*self.columns)
+        self.rows = list(zip(*self.columns))
 
     @contextmanager
     def update_columns_from_rows(self):
         yield
-        self.rows = zip(*self.columns)
+        self.rows = list(zip(*self.columns))
 
     # translation
     def move_column(self, column_name, to):

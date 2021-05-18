@@ -1,3 +1,4 @@
+import copy
 from contextlib import contextmanager
 
 
@@ -6,7 +7,7 @@ class CSVException(BaseException):
 
 
 class CSV(object):
-    def __init__(self, path, remote_quotes=False):
+    def __init__(self, path, remove_surrounding_quotes=False):
         self.path = path
 
         with open(path, 'r') as csv:
@@ -16,29 +17,26 @@ class CSV(object):
 
         for l in raw:
             line = l.rstrip('\n').rstrip('\r')
+            entries = line.split(',')
 
-            if remote_quotes:
-                row = []
-                entry = ''
-                seen_quote = False
+            # Sometimes values are surrounded by quotes.
+            # If indicated, remove leading and trailing quotes from headers and entries.
+            if remove_surrounding_quotes:
+                fixed_entries = []
 
-                for char in line:
-                    is_quote = char == '"'
+                for entry in entries:
+                    fixed_entry = entry
 
-                    if is_quote and not seen_quote:
-                        seen_quote = True
-                        continue
-                    elif is_quote and seen_quote:
-                        row.append(entry)
-                        entry = ''
-                        seen_quote = False
-                    elif not is_quote and seen_quote:
-                        entry += char
+                    if fixed_entry.startswith('"') or fixed_entry.startswith('\''):
+                        fixed_entry = fixed_entry[1:]
+                    if fixed_entry.endswith('"') or fixed_entry.endswith('\''):
+                        fixed_entry = fixed_entry[:-1]
 
-                self.rows.append(row)
+                    fixed_entries.append(fixed_entry)
 
-            else:
-                self.rows.append(line.split(','))
+                entries = fixed_entries
+
+            self.rows.append(entries)
 
         self.headers = self.rows.pop(0)
         self._init_header_indices()

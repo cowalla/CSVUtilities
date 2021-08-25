@@ -1,5 +1,16 @@
-import copy
 from contextlib import contextmanager
+
+
+def open_csv(path, *args, **kwargs):
+    """
+    Opens and parses a csv into an easily-manipulable Python object.
+
+    :param path: The full file path to the CSV.
+    :param args: Any arguments to the CSV object.
+    :param kwargs: Any keyword arguments to the CSV object.
+    :return: An initialized CSV.
+    """
+    return CSV(path, *args, **kwargs)
 
 
 class CSVException(BaseException):

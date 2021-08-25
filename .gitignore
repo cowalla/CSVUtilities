@@ -1,7 +1,15 @@
+#  Editors
 .idea/
-*.pyc
+
+
 ## BUILD FILES
 build/
 *.egg-info
 dist/
+*.pyc
+
+# Any fixtures used.
 *.csv
+
+# Miscellania
+*.DS_Store
